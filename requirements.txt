@@ -1,0 +1,10 @@
+numpy
+pandas
+scikit-learn
+tensorflow
+torch
+opencv-python
+requests
+beautifulsoup4
+PyPDF2
+transformers

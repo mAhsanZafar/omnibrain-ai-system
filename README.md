@@ -38,9 +38,29 @@ The repository is structured to separate the "brain" (core logic) from the "inpu
 * **Development:** Advanced ML pipeline experimentation and autonomous agent research.
 
 ---
-
 ## 🛠️ Installation & Setup
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/mAhsanZafar/omnibrain-ai-system
+Follow these steps to get OmniBrain AI System running on your machine:
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/mAhsanZafar/omnibrain-ai-system
+cd omnibrain-ai-system
+
+### 2. Install Dependencies
+
+Install all required Python packages using:
+
+```bash
+pip install -r requirements.txt
+
+### 3. Run the System (Example)
+
+Launch the core modules with:
+
+```bash
+# Launch the AI coding assistant
+python CMAI.py
+
+# Launch the self-modifying AI core
+python SMAI.py

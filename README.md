@@ -46,15 +46,14 @@ Follow these steps to get OmniBrain AI System running on your machine:
 ```bash
 git clone https://github.com/mAhsanZafar/omnibrain-ai-system
 cd omnibrain-ai-system
----
-
+```
 ## 2. Install Dependencies
 
 Install all required Python packages using:
 
 ```bash
 pip install -r requirements.txt
-
+```
 ## 3. Run the System (Example)
 
 Launch the core modules with:
@@ -65,3 +64,4 @@ python CMAI.py
 
 # Launch the self-modifying AI core
 python SMAI.py
+```

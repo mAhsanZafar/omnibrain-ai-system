@@ -43,5 +43,4 @@ The repository is structured to separate the "brain" (core logic) from the "inpu
 
 1. **Clone the repository:**
    ```bash
-   git clone [[Https://github.com/mAhsanZafar/omnibrain-ai-system)]
-   
+   git clone https://github.com/mAhsanZafar/omnibrain-ai-system

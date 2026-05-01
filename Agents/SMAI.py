@@ -244,6 +244,7 @@ class SelfModifyingAI:
         return frame
 
     def text_to_audio(self, text, output_path=None, sample_rate=16000, tone_duration=0.08):
+        """Render tone-based audio from text (not full text-to-speech)."""
         output_path = output_path or os.path.join(
             self.output_dir,
             f"response_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"

@@ -18,6 +18,16 @@ import logging
 import pickle
 import cv2
 
+AUDIO_BASE_FREQUENCY = 220
+AUDIO_CHAR_MOD_RANGE = 50
+AUDIO_FREQUENCY_STEP = 10
+TEXT_PREVIEW_LENGTH = 120
+TEXT_POSITION_X = 20
+TEXT_FONT = cv2.FONT_HERSHEY_SIMPLEX
+TEXT_FONT_SCALE = 0.7
+TEXT_COLOR = (255, 255, 255)
+TEXT_THICKNESS = 2
+
 class SelfModifyingAI:
     def __init__(self, data_dir, model_dir, frame_dir, model_type=None, versioning=True, real_time_training=False, output_dir=None, load_external_models=True):
         self.data_dir = data_dir
@@ -227,6 +237,12 @@ class SelfModifyingAI:
                 responses.append(f"{name}: unavailable ({exc})")
         return " | ".join(responses)
 
+    def _render_text_frame(self, text, width, height):
+        frame = np.zeros((height, width, 3), dtype=np.uint8)
+        preview = text[:TEXT_PREVIEW_LENGTH]
+        cv2.putText(frame, preview, (TEXT_POSITION_X, height // 2), TEXT_FONT, TEXT_FONT_SCALE, TEXT_COLOR, TEXT_THICKNESS)
+        return frame
+
     def text_to_audio(self, text, output_path=None, sample_rate=16000, tone_duration=0.08):
         output_path = output_path or os.path.join(
             self.output_dir,
@@ -234,7 +250,7 @@ class SelfModifyingAI:
         )
         tones = []
         for char in text:
-            frequency = 220 + (ord(char) % 50) * 10
+            frequency = AUDIO_BASE_FREQUENCY + (ord(char) % AUDIO_CHAR_MOD_RANGE) * AUDIO_FREQUENCY_STEP
             t = np.linspace(0, tone_duration, int(sample_rate * tone_duration), False)
             tone = 0.3 * np.sin(2 * np.pi * frequency * t)
             tones.append(tone)
@@ -254,9 +270,8 @@ class SelfModifyingAI:
             self.output_dir,
             f"response_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
         )
-        canvas = np.zeros((height, width, 3), dtype=np.uint8)
-        cv2.putText(canvas, text[:120], (20, height // 2), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-        cv2.imwrite(output_path, canvas)
+        frame = self._render_text_frame(text, width, height)
+        cv2.imwrite(output_path, frame)
         return output_path
 
     def text_to_video(self, text, output_path=None, width=640, height=360, fps=12, duration_seconds=3):
@@ -266,8 +281,7 @@ class SelfModifyingAI:
         )
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         writer = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-        frame = np.zeros((height, width, 3), dtype=np.uint8)
-        cv2.putText(frame, text[:120], (20, height // 2), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        frame = self._render_text_frame(text, width, height)
         for _ in range(int(duration_seconds * fps)):
             writer.write(frame)
         writer.release()

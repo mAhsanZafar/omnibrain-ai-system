@@ -21,6 +21,10 @@ from nltk.corpus import stopwords
 # Setup logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Cross-validation constants
+MIN_CV_SPLITS = 2
+MAX_CV_SPLITS = 5
+
 # Ensure the necessary NLTK data is downloaded
 nltk.download('stopwords')
 
@@ -94,7 +98,7 @@ def train_and_save_model(X, y, output_path):
         best_classifier = classifiers['logistic_regression']
     else:
         min_class_count = min([y.count(label) for label in set(y)])
-        n_splits = max(2, min(5, min_class_count))
+        n_splits = max(MIN_CV_SPLITS, min(MAX_CV_SPLITS, min_class_count))
 
         for classifier_name, classifier in classifiers.items():
             logging.info(f"Training {classifier_name}")

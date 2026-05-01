@@ -109,6 +109,15 @@ def extract_frame_features(video_path, frame_stride=30):
     }
 
 
+def get_video_label(video_path, video_dir):
+    parent_label = os.path.basename(os.path.dirname(video_path))
+    base_label = os.path.splitext(os.path.basename(video_path))[0]
+    video_dir_name = os.path.basename(os.path.abspath(video_dir))
+    if parent_label and parent_label != video_dir_name:
+        return parent_label
+    return base_label
+
+
 def collect_video_samples(video_dir, asr_model, frame_stride):
     video_files = [
         os.path.join(video_dir, file)
@@ -131,7 +140,7 @@ def collect_video_samples(video_dir, asr_model, frame_stride):
             transcript = transcribe_audio(video_path, asr_pipeline)
 
         frame_features = extract_frame_features(video_path, frame_stride=frame_stride)
-        label = os.path.basename(os.path.dirname(video_path)) or os.path.splitext(os.path.basename(video_path))[0]
+        label = get_video_label(video_path, video_dir)
 
         rows.append({
             "transcript": transcript,

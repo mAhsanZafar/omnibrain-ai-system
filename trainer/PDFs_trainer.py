@@ -98,24 +98,28 @@ def train_and_save_model(X, y, output_path):
         best_classifier = classifiers['logistic_regression']
     else:
         min_class_count = min([y.count(label) for label in set(y)])
-        n_splits = max(MIN_CV_SPLITS, min(MAX_CV_SPLITS, min_class_count))
+        if min_class_count < MIN_CV_SPLITS:
+            logging.warning("Not enough samples per class for cross-validation. Training with logistic regression only.")
+            best_classifier = classifiers['logistic_regression']
+        else:
+            n_splits = min(MAX_CV_SPLITS, min_class_count)
 
-        for classifier_name, classifier in classifiers.items():
-            logging.info(f"Training {classifier_name}")
-            model = make_pipeline(
-                TfidfVectorizer(),
-                classifier
-            )
+            for classifier_name, classifier in classifiers.items():
+                logging.info(f"Training {classifier_name}")
+                model = make_pipeline(
+                    TfidfVectorizer(),
+                    classifier
+                )
 
-            cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
-            scores = cross_val_score(model, X, y, cv=cv)
-            avg_score = scores.mean()
+                cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
+                scores = cross_val_score(model, X, y, cv=cv)
+                avg_score = scores.mean()
 
-            logging.info(f"Average cross-validation score for {classifier_name}: {avg_score}")
+                logging.info(f"Average cross-validation score for {classifier_name}: {avg_score}")
 
-            if avg_score > best_score:
-                best_score = avg_score
-                best_classifier = classifier
+                if avg_score > best_score:
+                    best_score = avg_score
+                    best_classifier = classifier
 
     if best_classifier is None:
         logging.warning("No classifier selected. Defaulting to logistic regression.")

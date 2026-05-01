@@ -1,8 +1,9 @@
-import os
+import argparse
 import glob
+import os
 import pickle
+import joblib
 import logging
-import time
 import fitz  
 import pytesseract
 from langdetect import detect
@@ -77,7 +78,7 @@ def load_data_from_folder(folder_path):
         labels.append(os.path.basename(file_path).split('.')[0])  # Assuming filenames are labels
     return documents, labels
 
-def train_and_save_model(X, y, model_name='model.csv'):
+def train_and_save_model(X, y, output_path):
     classifiers = {
         'logistic_regression': LogisticRegression(max_iter=1000),
         'random_forest': RandomForestClassifier(),
@@ -88,25 +89,33 @@ def train_and_save_model(X, y, model_name='model.csv'):
     best_classifier = None
     best_score = -1
 
-    min_class_count = min([y.count(label) for label in set(y)])
-    n_splits = min(5, min_class_count)
+    if len(set(y)) < 2:
+        logging.warning("Not enough classes to compare models. Training with logistic regression only.")
+        best_classifier = classifiers['logistic_regression']
+    else:
+        min_class_count = min([y.count(label) for label in set(y)])
+        n_splits = max(2, min(5, min_class_count))
 
-    for classifier_name, classifier in classifiers.items():
-        logging.info(f"Training {classifier_name}")
-        model = make_pipeline(
-            TfidfVectorizer(),
-            classifier
-        )
+        for classifier_name, classifier in classifiers.items():
+            logging.info(f"Training {classifier_name}")
+            model = make_pipeline(
+                TfidfVectorizer(),
+                classifier
+            )
 
-        cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
-        scores = cross_val_score(model, X, y, cv=cv)
-        avg_score = scores.mean()
+            cv = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
+            scores = cross_val_score(model, X, y, cv=cv)
+            avg_score = scores.mean()
 
-        logging.info(f"Average cross-validation score for {classifier_name}: {avg_score}")
+            logging.info(f"Average cross-validation score for {classifier_name}: {avg_score}")
 
-        if avg_score > best_score:
-            best_score = avg_score
-            best_classifier = classifier
+            if avg_score > best_score:
+                best_score = avg_score
+                best_classifier = classifier
+
+    if best_classifier is None:
+        logging.warning("No classifier selected. Defaulting to logistic regression.")
+        best_classifier = classifiers['logistic_regression']
 
     logging.info(f"Best classifier: {best_classifier}")
 
@@ -116,22 +125,27 @@ def train_and_save_model(X, y, model_name='model.csv'):
     )
     best_model.fit(X, y)
 
-    timestamp = time.strftime("%Y%m%d-%H%M%S")
-    versioned_model_name = f"{model_name.split('.')[0]}_{timestamp}.csv"
-    with open(versioned_model_name, 'wb') as model_file:
-        pickle.dump(best_model, model_file)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    joblib.dump(best_model, output_path)
+    logging.info(f"Model saved to {output_path}")
 
-def load_model(model_name='model.csv'):
-    with open(model_name, 'rb') as model_file:
+def load_model(model_path):
+    with open(model_path, 'rb') as model_file:
         model = pickle.load(model_file)
     return model
 
-folder_path = r"E:\BAI\book"
+if __name__ == "__main__":
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    default_input_dir = os.path.join(repo_root, "Data source", "pdfs")
+    default_output_model = os.path.join(repo_root, "pre-trained model", "pdf_model.pkl")
 
-X, y = load_data_from_folder(folder_path)
+    parser = argparse.ArgumentParser(description="Train a PDF classifier and save pdf_model.pkl")
+    parser.add_argument("--input-dir", default=default_input_dir, help="Directory containing PDF files")
+    parser.add_argument("--output-model", default=default_output_model, help="Path to save the trained model")
+    args = parser.parse_args()
 
-train_and_save_model(X, y)
-
-loaded_model = load_model()
-
-# Now you can use the loaded_model for predictions
+    X, y = load_data_from_folder(args.input_dir)
+    if not X:
+        logging.warning("No PDF data found to train the model.")
+    else:
+        train_and_save_model(X, y, args.output_model)

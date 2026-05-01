@@ -27,7 +27,7 @@ The repository is structured to separate the "brain" (core logic) from the "inpu
 * **CMAI.py**: Code-generation and technical assistant.
 * **SMAI.py**: The self-modifying core using evolutionary optimization.
 * **Ingestion Engines**: Specialized modules for PDF, YouTube, and Web scraping.
-* **Model Zoo**: Storage for trained `.pkl` models and CNN configurations.
+* **Model Zoo**: Storage for trained `.pkl` models (model.pkl, pdf_model.pkl, google_model.pkl, libgen_model.pkl, yt_model.pkl) and CNN configurations.
 
 ---
 
